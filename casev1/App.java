@@ -1,55 +1,54 @@
 package casev1;
+
 import casev1.Devices.*;
 import casev1.interfaces.*;
 import casev1.Payment.*;
 import casev1.Services.*;
+import casev1.Student.*;
 import casev1.Transport.*;
-
 
 class InMemoryOrderManager implements OrderManager {
     private int stock = 100;
-    public boolean isStockAvailable() { return stock > 0; }
-    public void decreaseStock(int amount) { stock -= amount; }
-    public int getCurrentStock() { return stock; }
-}
 
-class MySqlOrderRepository implements OrderRepository {
-    public void save(String studentId, double amount) {
-        System.out.println("--> Saving order for " + studentId + " to MySQL.");
+    public boolean isStockAvailable() {
+        return stock > 0;
+    }
+
+    public void decreaseStock(int amount) {
+        stock -= amount;
+    }
+
+    public int getCurrentStock() {
+        return stock;
     }
 }
-
-class EmailService implements MessageService {
-    public void sendMessage(String recipient, String content) {
-        System.out.println("--> Sending email to: " + recipient + " | Message: " + content);
-    }
-}
-
 
 public class App {
     public static void main(String[] args) {
-        System.out.println("--- DEMO TICKET SERVICE ---");
+        System.out.println("========== DEMO TICKET SERVICE ==========");
 
+        // 1. Siapkan semua dependensi/layanan
         var manager = new InMemoryOrderManager();
-        var repository = new MySqlOrderRepository();
-        var emailer = new EmailService();
+        var studentRepo = new MySqlStudentRepository();
+        var notifier = new EmailNotificationService();
 
-        TicketService gopayTicketService = new TicketService(
-            manager, repository, emailer, new GopayHandler()
-        );
-        gopayTicketService.createOrder("S123", "s123@email.com", 75000);
+        Student student1 = new Student("S123", "Budi");
+        Student student2 = new Student("S456", "Ani");
 
-        System.out.println("---");
+        var gopayTicketService = new TicketService(
+                manager, studentRepo, notifier, new GopayHandler());
+        gopayTicketService.createOrder(student1, "budi@email.com", 75000);
 
-        TicketService bniTicketService = new TicketService(
-            manager, repository, emailer, new BniVaHandler()
-        );
-        bniTicketService.createOrder("S456", "s456@email.com", 75000);
+        System.out.println("==========");
 
-        System.out.println("\n--- DEMO TRANSPORT (LSP) ---");
+        var bniTicketService = new TicketService(
+                manager, studentRepo, notifier, new BniVaHandler());
+        bniTicketService.createOrder(student2, "ani@email.com", 75000);
+
+        System.out.println("\n========== DEMO TRANSPORT (LSP) ==========");
         Vehicle myCar = new Car();
         myCar.setSpeed(60);
-        ((Car) myCar).turnOnEngine(); 
+        ((Car) myCar).turnOnEngine();
         myCar.move();
 
         Vehicle myBike = new Bicycle();
